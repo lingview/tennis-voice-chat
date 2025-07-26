@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网球聊天室</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+        }
+        input, button {
+            padding: 5px;
+        }
+        #chat-messages {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .system-message {
+            background-color: #e0e0e0;
+            font-style: italic;
+            color: #666;
+        }
+        .user-message {
+            background-color: #d1e7ff;
+        }
+        .own-message {
+            background-color: #c2f0c2;
+        }
+        .message-header {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .message-content {
+            word-wrap: break-word;
+        }
+        .username {
+            font-weight: bold;
+        }
+        .timestamp {
+            float: right;
+            font-size: 0.8em;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .connected {
+            background-color: green;
+        }
+        .disconnected {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>网球聊天室</h1>
+
+    <div class="container">
+        <h2>创建或加入房间</h2>
+        <div class="input-group">
+            <button id="create-room">创建房间</button>
+        </div>
+        <div class="input-group">
+            <label for="room-id">房间ID:</label>
+            <input type="text" id="room-id" placeholder="输入房间ID">
+            <button id="join-room">加入房间</button>
+        </div>
+        <div id="current-room" style="display:none;">
+            <p>当前房间ID: <span id="current-room-id"></span></p>
+            <p>连接状态: <span id="connection-status" class="status-indicator disconnected"></span><span id="status-text">未连接</span></p>
+            <button id="leave-room">离开房间</button>
+        </div>
+    </div>
+
+    <div class="container" id="chat-container" style="display:none;">
+        <h2>聊天室</h2>
+        <div id="chat-messages"></div>
+        <div class="input-group">
+            <input type="text" id="message-input" placeholder="输入消息..." maxlength="500">
+            <button id="send-message">发送</button>
+        </div>
+    </div>
+
+    <script src="js/jquery.min.js"></script>
+    <script>
+        let currentRoomId = null;
+        let currentUser = null;
+        let websocket = null;
+
+        // 创建房间
+        $('#create-room').click(function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('请先登录');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            $.ajax({
+                url: '/api/chat/create',
+                type: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // 直接从token中解析用户名
+                        const username = parseJwt(token).sub;
+                        currentUser = username;
+                        joinRoom(data.roomId, username);
+                    } else {
+                        alert('创建房间失败: ' + data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        alert('认证失败，请重新登录');
+                        window.location.href = 'login.html';
+                    } else {
+                        alert('创建房间时发生错误');
+                    }
+                }
+            });
+        });
+
+        // 加入房间
+        $('#join-room').click(function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('请先登录');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const roomId = $('#room-id').val();
+            if (roomId) {
+                // 直接从token中解析用户名
+                const username = parseJwt(token).sub;
+                currentUser = username;
+                joinRoom(roomId, username);
+            } else {
+                alert('请输入房间ID');
+            }
+        });
+
+        // 离开房间
+        $('#leave-room').click(function() {
+            leaveRoom();
+        });
+
+        // 发送消息
+        $('#send-message').click(function() {
+            sendMessage();
+        });
+
+        // 回车发送消息
+        $('#message-input').keypress(function(e) {
+            if (e.which === 13) {
+                sendMessage();
+            }
+        });
+
+        function joinRoom(roomId, username) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('请先登录');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            $.ajax({
+                url: '/api/chat/join',
+                type: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                contentType: 'application/json',
+                data: JSON.stringify({ roomId: roomId }),
+                success: function(data) {
+                    if (data.success) {
+                        currentRoomId = roomId;
+                        $('#current-room-id').text(roomId);
+                        $('#current-room').show();
+                        $('#chat-container').show();
+
+                        // 连接WebSocket
+                        connectWebSocket(roomId, username);
+                    } else {
+                        alert('加入房间失败: ' + data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        alert('认证失败，请重新登录');
+                        window.location.href = 'login.html';
+                    } else {
+                        alert('加入房间时发生错误');
+                    }
+                }
+            });
+        }
+
+        function connectWebSocket(roomId, username) {
+            // 关闭已存在的连接
+            if (websocket) {
+                websocket.close();
+            }
+
+            // 创建新的WebSocket连接
+            const wsUrl = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
+                          window.location.host + '/ws/chat';
+            websocket = new WebSocket(wsUrl);
+
+            websocket.onopen = function(event) {
+                console.log('WebSocket连接已建立');
+                updateConnectionStatus(true);
+
+                // 发送加入房间消息
+                const joinMessage = {
+                    type: 'join',
+                    roomId: roomId,
+                    username: username
+                };
+                websocket.send(JSON.stringify(joinMessage));
+            };
+
+            websocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+
+            websocket.onclose = function(event) {
+                console.log('WebSocket连接已关闭');
+                updateConnectionStatus(false);
+            };
+
+            websocket.onerror = function(error) {
+                console.error('WebSocket错误:', error);
+                updateConnectionStatus(false);
+            };
+        }
+
+        function handleMessage(data) {
+            switch (data.type) {
+                case 'welcome':
+                    addMessage('系统', data.message, new Date().toLocaleString(), 'system');
+                    break;
+                case 'userJoined':
+                    addMessage('系统', `${data.username} 加入了聊天室`,
+                              new Date(data.timestamp).toLocaleString(), 'system');
+                    break;
+                case 'userLeft':
+                    addMessage('系统', `${data.username} 离开了聊天室`,
+                              new Date(data.timestamp).toLocaleString(), 'system');
+                    break;
+                case 'message':
+                    const isOwnMessage = (data.username === currentUser);
+                    addMessage(data.username, data.content,
+                              new Date(data.timestamp).toLocaleString(),
+                              isOwnMessage ? 'own' : 'user');
+                    break;
+                case 'error':
+                    alert('错误: ' + data.error);
+                    break;
+                default:
+                    console.log('未知消息类型:', data);
+            }
+        }
+
+        function sendMessage() {
+            const message = $('#message-input').val().trim();
+            if (message && currentRoomId && websocket && websocket.readyState === WebSocket.OPEN) {
+                const messageObj = {
+                    type: 'message',
+                    roomId: currentRoomId,
+                    username: currentUser,
+                    content: message
+                };
+                websocket.send(JSON.stringify(messageObj));
+                $('#message-input').val('');
+            } else if (!message) {
+                alert('请输入消息内容');
+            } else if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+                alert('连接已断开，请重新加入房间');
+            }
+        }
+
+        function leaveRoom() {
+            if (currentRoomId && websocket && websocket.readyState === WebSocket.OPEN) {
+                // 发送离开房间消息
+                const leaveMessage = {
+                    type: 'leave',
+                    roomId: currentRoomId,
+                    username: currentUser
+                };
+                websocket.send(JSON.stringify(leaveMessage));
+            }
+
+            // 关闭WebSocket连接
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+
+            // 如果是创建者，关闭房间
+            const token = localStorage.getItem('token');
+            if (token && currentUser) {
+                $.ajax({
+                    url: '/api/chat/close',
+                    type: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    contentType: 'application/json',
+                    data: JSON.stringify({ roomId: currentRoomId }),
+                    success: function(data) {
+                        if (!data.success) {
+                            console.log('关闭房间失败: ' + data.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        if (xhr.status !== 401) {
+                            console.log('关闭房间时发生错误');
+                        }
+                    }
+                });
+            }
+
+            // 隐藏聊天界面
+            $('#chat-container').hide();
+            $('#current-room').hide();
+            $('#chat-messages').empty();
+            currentRoomId = null;
+            currentUser = null;
+        }
+
+        function addMessage(username, content, timestamp, type) {
+            const chatContainer = $('#chat-messages');
+            const messageDiv = $('<div class="message"></div>');
+
+            switch (type) {
+                case 'system':
+                    messageDiv.addClass('system-message');
+                    break;
+                case 'own':
+                    messageDiv.addClass('own-message');
+                    break;
+                case 'user':
+                default:
+                    messageDiv.addClass('user-message');
+                    break;
+            }
+
+            messageDiv.html(`
+                <div class="message-header">
+                    <span class="username">${username}</span>
+                    <span class="timestamp">${timestamp}</span>
+                </div>
+                <div class="message-content">${escapeHtml(content)}</div>
+            `);
+
+            chatContainer.append(messageDiv);
+            chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusIndicator = $('#connection-status');
+            const statusText = $('#status-text');
+
+            if (connected) {
+                statusIndicator.removeClass('disconnected').addClass('connected');
+                statusText.text('已连接');
+            } else {
+                statusIndicator.removeClass('connected').addClass('disconnected');
+                statusText.text('未连接');
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // 解析JWT token获取用户信息
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('解析JWT失败:', e);
+                return {};
+            }
+        }
+
+        // 页面加载时检查是否有token
+        $(document).ready(function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('请先登录');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // 页面关闭前离开房间
+        window.addEventListener('beforeunload', function() {
+            if (currentRoomId) {
+                leaveRoom();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+spring:
+  # Jackson 配置
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  # 激活的 Profile
+  profiles:
+    active: dev
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/chat?characterEncoding=utf-8&nullCatalogMeansCurrent=true&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true&useAffectedRows=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: "ling060318"
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 1000000MB
+      max-request-size: 200000MB
+  # 开发工具配置
+  devtools:
+    restart:
+      enabled: true
+  # Shell 配置
+  shell:
+    interactive:
+      enabled: true
+  thymeleaf:
+    cache: false
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: ""
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui/index.html
+
+#  mail:
+#    default-encoding: UTF-8
+#    host: smtp.exmail.qq.com # 网站发送邮件邮箱服务 host    port: 465
+#    username: official@lingview.xyz # 邮箱
+#    password: A5qY9A4F9a3jEuw8 # 授权码
+#    protocol: smtp
+#    properties:
+#      mail:
+#        smtp:
+#          auth: 'true'
+#          socketFactory:
+#            class: com.rymcu.forest.util.MailSSLSocketFactory
+#            #            class: javax.net.ssl.SSLSocketFactory
+#            port: 465
+#          ssl:
+#            enable: true
+#          starttls:
+#            enable: true
+#          stattls:
+#            required: true
+#          connectiontimeout: 5000
+#          timeout: 3000
+#          writetimeout: 5000
+
+# 项目信息
+project:
+  version: @project.version@
+  build-date: @maven.build.timestamp@
+
+# Spring Boot Actuator 配置
+management:
+  endpoint:
+    restart:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# MyBatis 配置
+mybatis:
+  typeAliasesPackage: cn.dmsec.code.**.domain
+  mapperLocations: classpath*:mapper/*Mapper.xml
+  configLocation: classpath:mybatis-config.xml
+
+# Server 配置
+server:
+  port: 5499
+  servlet:
+    context-path: /
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 800
+    min-spare-threads: 30
+
+logging:
+  level:
+    com.falldealingsystem: debug
+    org.springframework: warn
+
+file:
+  upload-dir: upload
