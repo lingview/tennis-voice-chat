@@ -3,7 +3,6 @@ $(document).ready(function() {
         let username = $('#username').val();
         let email = $('#email').val();
         let password = $('#password').val();
-
         let encryptedPassword = CryptoJS.SHA512(password).toString();
 
         $.ajax({

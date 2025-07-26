@@ -2,9 +2,7 @@ $(document).ready(function() {
     $('#submit-button').click(function() {
         let username = $('#username').val();
         let password = $('#password').val();
-
         let encryptedPassword = CryptoJS.SHA512(password).toString();
-
         $.ajax({
             url: '/api/login',
             type: 'POST',
