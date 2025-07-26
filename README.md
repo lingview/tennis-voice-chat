@@ -750,4 +750,147 @@ tennis-voice-chat/
 
 ---
 
+# 🎾 双人在线聊天室系统架构图
+
+## 系统整体架构流程图
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 🎾 双人在线聊天室系统 - "让人们好好说话"                                │
+│                                      System Architecture                                        │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                    ┌─────────────────────────────────┐
+                                    │            👤 用户层              │
+                                    │         (Frontend Layer)       │
+                                    └─────────────────────────────────┘
+                                                    │
+                    ┌─────────────────────────────────┼─────────────────────────────────┐
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   📱 Web Frontend    │          │   💬 Chat Interface │          │   🛡️ Security Layer │
+        │                     │          │                     │          │                     │
+        │ • login.html        │          │ • chat-enhanced.html│          │ • JWT Token Auth   │
+        │ • register.html     │          │ • WebSocket Client  │          │ • Session Management│
+        │ • CSS/JS Assets     │          │ • Real-time UI      │          │ • CORS Config       │
+        │ • Form Validation   │          │ • Message Display   │          │ • XSS Protection    │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+                    │                                 │                                 │
+                    └─────────────────────────────────┼─────────────────────────────────┘
+                                                    │
+                                    ┌─────────────────────────────────┐
+                                    │          🌐 网络层                │
+                                    │        (Network Layer)          │
+                                    └─────────────────────────────────┘
+                                                    │
+                    ┌─────────────────────────────────┼─────────────────────────────────┐
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   📡 HTTP/REST API   │          │   🔌 WebSocket      │          │   🔒 Authentication │
+        │                     │          │                     │          │                     │
+        │ • POST /api/login   │          │ • ws://*/ws/chat    │          │ • JWT Validation    │
+        │ • POST /api/register│          │ • Real-time Comm   │          │ • Token Refresh     │
+        │ • POST /api/chat/*  │          │ • Message Broadcast │          │ • User Session      │
+        │ • GET /api/scores/* │          │ • User Join/Leave   │          │ • Security Filter   │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+                    │                                 │                                 │
+                    └─────────────────────────────────┼─────────────────────────────────┘
+                                                    │
+                                    ┌─────────────────────────────────┐
+                                    │           ⚙️ 控制层              │
+                                    │       (Controller Layer)        │
+                                    └─────────────────────────────────┘
+                                                    │
+                    ┌─────────────────────────────────┼─────────────────────────────────┐
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   👥 User Controller │          │   💬 Chat Controller │          │   📊 Score Controller│
+        │                     │          │                     │          │                     │
+        │ • LoginController   │          │ • ChatRoomController│          │ • ScoreController   │
+        │ • RegisterController│          │ • MessageController │          │ • LeaderboardCtrl   │
+        │ • User Management   │          │ • Room Management   │          │ • Achievement Mgmt  │
+        │ • JWT Generation    │          │ • History Query     │          │ • Analytics API     │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+                    │                                 │                                 │
+                    └─────────────────────────────────┼─────────────────────────────────┘
+                                                    │
+                                    ┌─────────────────────────────────┐
+                                    │          🔧 业务层                │
+                                    │        (Service Layer)          │
+                                    └─────────────────────────────────┘
+                                                    │
+                    ┌─────────────────────────────────┼─────────────────────────────────┐
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   🔐 Auth Service    │          │   💬 Chat Service    │          │   🤖 AI Service     │
+        │                     │          │                     │          │                     │
+        │ • User Auth Logic   │          │ • Message Processing│          │ • Content Analysis  │
+        │ • Password Encrypt  │          │ • Room Management   │          │ • Toxicity Detection│
+        │ • Session Handling  │          │ • History Storage   │          │ • Sentiment Analysis│
+        │ • Security Validation│          │ • Real-time Sync   │          │ • Keyword Filter    │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+                    │                                 │                                 │
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   🏆 Score Service   │          │   📈 Analytics Svc  │          │   🔔 Notification   │
+        │                     │          │                     │          │                     │
+        │ • Score Calculation │          │ • User Behavior     │          │ • Real-time Alert   │
+        │ • Level Management  │          │ • Statistics Report │          │ • Achievement Push  │
+        │ • Achievement System│          │ • Trend Analysis    │          │ • Warning System    │
+        │ • Leaderboard Logic │          │ • Data Insights     │          │ • Progress Update   │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+                    │                                 │                                 │
+                    └─────────────────────────────────┼─────────────────────────────────┘
+                                                    │
+                                    ┌─────────────────────────────────┐
+                                    │          🗃️ 数据层               │
+                                    │         (Data Layer)            │
+                                    └─────────────────────────────────┘
+                                                    │
+                    ┌─────────────────────────────────┼─────────────────────────────────┐
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   📊 Repository      │          │   🔄 MyBatis Mapper │          │   💾 Cache Layer    │
+        │                     │          │                     │          │                     │
+        │ • UserRepository    │          │ • ControlsMapper    │          │ • Redis Cache       │
+        │ • ChatMessageRepo   │          │ • LoginMapper       │          │ • Session Cache     │
+        │ • ChatRoomRepo      │          │ • RegisterMapper    │          │ • Message Cache     │
+        │ • ScoreRepository   │          │ • ChatRoomMapper    │          │ • User State Cache  │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+                    │                                 │                                 │
+                    └─────────────────────────────────┼─────────────────────────────────┘
+                                                    │
+                                    ┌─────────────────────────────────┐
+                                    │         🗄️ 存储层                │
+                                    │        (Storage Layer)          │
+                                    └─────────────────────────────────┘
+                                                    │
+                    ┌─────────────────────────────────┼─────────────────────────────────┐
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   🗃️ MySQL Database  │          │   📁 File Storage   │          │   🔍 Search Engine  │
+        │                     │          │                     │          │                     │
+        │ • user_information  │          │ • Static Assets     │          │ • Message Index     │
+        │ • chat_rooms        │          │ • User Avatars      │          │ • Content Search    │
+        │ • chat_messages     │          │ • File Uploads      │          │ • History Query     │
+        │ • user_scores       │          │ • Log Files         │          │ • Analytics Data    │
+        │ • ai_analysis_results│          │ • Backup Files      │          │ • Report Generation │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+
+                                    ┌─────────────────────────────────┐
+                                    │         🌐 外部服务层             │
+                                    │       (External Services)       │
+                                    └─────────────────────────────────┘
+                                                    │
+                    ┌─────────────────────────────────┼─────────────────────────────────┐
+                    │                                 │                                 │
+        ┌─────────────────────┐          ┌─────────────────────┐          ┌─────────────────────┐
+        │   🤖 AI/ML Services  │          │   📧 Email Service  │          │   📱 Push Service   │
+        │                     │          │                     │          │                     │
+        │ • LLM API (DashScope)│          │ • Registration Mail │          │ • Mobile Push      │
+        │ • Toxicity Detection│          │ • Password Reset    │          │ • Browser Notify   │
+        │ • Sentiment Analysis│          │ • Notification Mail │          │ • Real-time Alert  │
+        │ • Content Filter    │          │ • System Announcements│          │ • Status Update    │
+        └─────────────────────┘          └─────────────────────┘          └─────────────────────┘
+
 > 如果这个项目对您有帮助，请给我们一个 ⭐️ Star！您的支持是我们持续改进的动力。
