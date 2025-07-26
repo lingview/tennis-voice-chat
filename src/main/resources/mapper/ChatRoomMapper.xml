@@ -4,12 +4,21 @@
 
 <mapper namespace="xyz.lingview.chat.mapper.ControlsMapper">
 
-    <!-- 结果映射 -->
+    <!-- ChatRoom结果映射 -->
     <resultMap id="chatRoomResultMap" type="xyz.lingview.chat.domain.ChatRoom">
         <id property="uuid" column="uuid"/>
         <result property="create_user" column="create_user"/>
         <result property="status" column="status"/>
         <result property="create_time" column="create_time"/>
+    </resultMap>
+
+    <!-- Message结果映射 -->
+    <resultMap id="messageResultMap" type="xyz.lingview.chat.domain.Message">
+        <result property="chat_room_id" column="chat_room_id"/>
+        <result property="username" column="username"/>
+        <result property="chat" column="chat"/>
+        <result property="create_time" column="create_time"/>
+        <result property="status" column="status"/>
     </resultMap>
 
     <!-- 插入新的聊天室 -->
@@ -31,5 +40,19 @@
         SET status = 2
         WHERE uuid = #{uuid}
     </update>
+
+    <!-- 保存消息 -->
+    <insert id="saveMessage" parameterType="xyz.lingview.chat.domain.Message">
+        INSERT INTO chat(chat_room_id, username, chat, status)
+        VALUES(#{chat_room_id}, #{username}, #{chat}, #{status})
+    </insert>
+
+    <!-- 获取聊天历史记录 -->
+    <select id="getChatHistory" parameterType="string" resultMap="messageResultMap">
+        SELECT chat_room_id, username, chat, create_time, status
+        FROM chat
+        WHERE chat_room_id = #{chat_room_id} AND status = 1
+        ORDER BY create_time ASC
+    </select>
 
 </mapper>

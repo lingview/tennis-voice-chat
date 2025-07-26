@@ -11,11 +11,31 @@
  Target Server Version : 80405 (8.4.5)
  File Encoding         : 65001
 
- Date: 26/07/2025 16:53:35
+ Date: 26/07/2025 18:49:18
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for chat
+-- ----------------------------
+DROP TABLE IF EXISTS `chat`;
+CREATE TABLE `chat`  (
+  `chat_room_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '聊天室uuid',
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '消息发送人',
+  `chat` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '聊天内容',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '发送时间',
+  `status` int NOT NULL COMMENT '1为正常0为删除',
+  PRIMARY KEY (`chat_room_id`) USING BTREE,
+  INDEX `username`(`username` ASC) USING BTREE,
+  CONSTRAINT `chat_room_id` FOREIGN KEY (`chat_room_id`) REFERENCES `chat_room` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `username` FOREIGN KEY (`username`) REFERENCES `user_information` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of chat
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for chat_room
@@ -34,6 +54,14 @@ CREATE TABLE `chat_room`  (
 -- ----------------------------
 -- Records of chat_room
 -- ----------------------------
+INSERT INTO `chat_room` VALUES ('2457b907-66e7-48e2-b5e9-0d3a200390cd', 'lingview', 1, '2025-07-26 18:09:18');
+INSERT INTO `chat_room` VALUES ('6f4009ea-6935-4f83-8f7f-cb8249f7d20d', 'admin', 2, '2025-07-26 17:26:42');
+INSERT INTO `chat_room` VALUES ('8a0dec09-1084-443f-bdcb-7e212796a973', 'admin', 1, '2025-07-26 17:15:55');
+INSERT INTO `chat_room` VALUES ('a0d2b1fa-ded6-47a7-a0a6-69eb06efb344', 'admin', 2, '2025-07-26 17:27:54');
+INSERT INTO `chat_room` VALUES ('b300b008-7d6f-44e6-98b0-cc66752d777a', 'admin', 2, '2025-07-26 17:31:47');
+INSERT INTO `chat_room` VALUES ('b642df2f-c73b-41aa-afe1-8e1323713e79', 'admin', 2, '2025-07-26 17:26:50');
+INSERT INTO `chat_room` VALUES ('c1737622-f394-4808-8094-ba18ce29d3e9', 'admin', 1, '2025-07-26 17:26:32');
+INSERT INTO `chat_room` VALUES ('f9a35aa2-e63d-41aa-ab81-597c17966f5a', 'admin', 2, '2025-07-26 17:30:18');
 
 -- ----------------------------
 -- Table structure for user_information

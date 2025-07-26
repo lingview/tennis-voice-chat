@@ -22,17 +22,14 @@ public class SecurityInterceptor implements HandlerInterceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityInterceptor.class);
 
-    // 敏感字段白名单（跳过检测）
     private static final Set<String> SENSITIVE_FIELDS = Set.of("token");
 
-    // XSS 关键词正则
     private static final List<String> XSS_REGEX = List.of(
             "<script.*?>.*?</script>",
             "on\\w+\\s*=",
             "javascript:\\w+",
             "eval\\$\\$(.*?)\\$\\$");
 
-    // SQL 注入正则
     private static final List<String> SQLI_REGEX = List.of(
         "(?:')|(?:--)|(/\\*(?:.|[\\n\\r])*?\\*/)|(\\b(?:ALTER|CREATE|DELETE|DROP|EXEC(?:UTE)?|INSERT(?: +INTO)?|MERGE|SELECT|UPDATE|UNION(?: +ALL)?)\\b)",
         "\\bOR\\b\\s+\\d+=\\d+"

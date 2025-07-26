@@ -1,4 +1,3 @@
-// ChatRoom.java
 package xyz.lingview.chat.domain;
 
 import lombok.Data;

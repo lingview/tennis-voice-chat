@@ -19,4 +19,7 @@ public interface ControlsMapper {
     ChatRoom findChatRoomByUuid(@Param("uuid") String uuid);
 
     void closeChatRoom(@Param("uuid") String uuid);
+    void saveMessage(Message message);
+    List<Message> getChatHistory(@Param("chat_room_id") String chat_room_id);
+
 }

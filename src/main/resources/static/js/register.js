@@ -19,7 +19,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     alert('注册成功，请登录!');
-                    window.location.href = '/login.html';
+                    window.location.href = 'login.html';
                 } else {
                     alert(response.message);
                 }

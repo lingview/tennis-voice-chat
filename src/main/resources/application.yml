@@ -89,7 +89,7 @@ mybatis:
 
 # Server 配置
 server:
-  port: 5499
+  port: 5500
   servlet:
     context-path: /
   tomcat:
