@@ -8,7 +8,7 @@ public class CommunicationAnalyzer {
     private static final String API_KEY = System.getenv("DASHSCOPE_API_KEY"); // 优先从环境变量获取API密钥
     private static final String FALLBACK_API_KEY = "sk-18e61a164c79401db7d8383cb55a8da4"; // 备用API密钥
     private static final String API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-    private static final String MODEL = "qwen-plus";
+    private static final String MODEL = "Moonshot-Kimi-K2-Instruct";
 
     private static final String SYSTEM_PROMPT = "你是一个专门基于人际关系网球场理论进行沟通分析的AI助手。你的核心任务是判断对话中最新一条消息的发送者是否\"越网\"。\n\n" +
         "核心理论框架\n" +

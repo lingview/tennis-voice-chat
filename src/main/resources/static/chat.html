@@ -722,10 +722,8 @@
             }
         }
 
-        // 在消息下方自动显示分析结果
         function displayAutoAnalysis(messageId, analysisText) {
             try {
-                // 提取越网判断结果
                 let summary = "分析中...";
                 if (analysisText.includes("【越网判断】：是")) {
                     summary = "⚠️ 越网警告";
@@ -743,7 +741,6 @@
                     `);
                     panel.removeClass('hidden');
 
-                    // 添加点击事件显示详细分析
                     panel.off('click').on('click', function() {
                         showAnalysisDetail(analysisText);
                     });
@@ -753,7 +750,6 @@
             }
         }
 
-        // 更新消息的分析状态显示
         function updateMessageAnalysisStatus(messageId, status) {
             const messageElement = $(`[data-message-id="${messageId}"]`);
             if (!messageElement.length) return;
@@ -771,13 +767,11 @@
                     break;
             }
 
-            // 移除旧的状态指示器并添加新的
             messageElement.find('.analysis-status').remove();
             messageElement.find('.message-header').append(statusHtml);
         }
 
         function showAnalysisDetail(analysisText) {
-            // 显示加载状态
             document.getElementById('analysisContent').innerHTML = '<div class="text-center text-gray-500 py-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>正在格式化分析结果...</p></div>';
             modal.style.display = "flex";
 
@@ -793,13 +787,11 @@
                 return;
             }
 
-            // 显示加载状态
             document.getElementById('analysisContent').innerHTML = '<div class="text-center text-gray-500 py-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>正在分析消息...</p></div>';
             debugInfo.style.display = debugMode ? 'block' : 'none';
             debugInfo.innerHTML = '请求分析: ' + messageContent;
             modal.style.display = "flex";
 
-            // 首先检查缓存
             if (messageId && analysisCache.has(messageId)) {
                 formatAnalysisResult(analysisCache.get(messageId));
                 if (debugMode) {
@@ -808,7 +800,6 @@
                 return;
             }
 
-            // 调用分析接口
             $.ajax({
                 url: '/api/analysis/communication',
                 type: 'POST',
@@ -832,7 +823,6 @@
                             analysisCache.set(messageId, data.analysis);
                             updateMessageAnalysisStatus(messageId, 'complete');
 
-                            // 更新分数
                             updateScore(data.analysis);
                         }
                         formatAnalysisResult(data.analysis);
@@ -862,19 +852,17 @@
             try {
                 console.log("原始分析文本:", analysisText);
 
-                // 如果分析文本包含错误信息，直接显示
                 if (analysisText.startsWith("沟通分析失败") || analysisText.startsWith("分析完成，但无法解析结果")) {
                     document.getElementById('analysisContent').innerHTML =
                         '<div class="text-red-500 whitespace-pre-wrap p-4">' + escapeHtml(analysisText) + '</div>';
                     return;
                 }
 
-                // 简单解析分析结果并格式化显示
                 const sections = analysisText.split('\n\n');
                 let formattedContent = '';
 
                 sections.forEach((section, index) => {
-                    // 跳过空段落
+
                     if (!section.trim()) return;
 
                     if (section.startsWith('【') && section.includes('】')) {
@@ -889,7 +877,6 @@
                             </div>
                         `;
                     } else {
-                        // 处理没有标题的段落
                         formattedContent += `
                             <div class="mb-6">
                                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">${escapeHtml(section).replace(/\n/g, '<br>')}</div>
@@ -898,7 +885,6 @@
                     }
                 });
 
-                // 如果没有格式化内容，显示原始文本
                 if (!formattedContent.trim()) {
                     formattedContent = '<div class="bg-gray-50 p-4 rounded-lg border border-gray-200">' + escapeHtml(analysisText).replace(/\n/g, '<br>') + '</div>';
                 }
@@ -953,7 +939,6 @@
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
 
-        // 解析JWT token获取用户信息
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
@@ -968,7 +953,6 @@
             }
         }
 
-        // 页面加载时检查是否有token
         $(document).ready(function() {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -980,20 +964,18 @@
                 $('#user-info').removeClass('hidden');
             }
 
-            // 添加调试模式切换（按F12打开控制台，然后按D键切换）
             $(document).keydown(function(e) {
                 if (e.key === 'd' || e.key === 'D') {
                     debugMode = !debugMode;
                     console.log('调试模式:', debugMode ? '开启' : '关闭');
                 }
-                // 按A键切换自动显示分析结果
+
                 if (e.key === 'a' || e.key === 'A') {
                     autoShowAnalysis = !autoShowAnalysis;
                     console.log('自动显示分析结果:', autoShowAnalysis ? '开启' : '关闭');
                 }
             });
 
-            // 页面刷新时保存缓存到localStorage
             window.addEventListener('beforeunload', function() {
                 try {
                     const cacheData = {};
@@ -1006,7 +988,6 @@
                 }
             });
 
-            // 页面加载时恢复缓存
             try {
                 const savedCache = localStorage.getItem('messageAnalysisCache');
                 if (savedCache) {
@@ -1021,14 +1002,12 @@
             }
         });
 
-        // 页面关闭前离开房间
         window.addEventListener('beforeunload', function() {
             if (currentRoomId) {
                 leaveRoom();
             }
         });
 
-        // 退出登录功能
         $('#logout-btn').click(function() {
             localStorage.removeItem('token');
             window.location.href = 'login.html';
